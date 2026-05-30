@@ -90,6 +90,56 @@ int main() {
 
     for (int step = 0; step < TOTAL_STEPS; step++) {
         double actual_time = step * DT;
-        apply_breach(h, u, v, zb, NX, NY, DX, DY, actual_time, DAM_X_POS, BREACH_WIDTH, BREACH_START_TIME, BREACH_FORMATION_TIME);
+        apply_breach(h, u, v, zb, NX, NY, DX, DY, 
+                    actual_time, DAM_X_POS, BREACH_WIDTH, 
+                    BREACH_START_TIME, BREACH_FORMATION_TIME);
+        solver_pass(h, u, v, h_new, u_new, v_new, zb,
+                    NX, NY, DX, DY, DT, MANNING_N);
+
+        #pragma omp parallel for
+        for (int i = 0; i < total_of_shells; i++) {
+            *(h + i) = h_new[i];
+            *(u + i) = u_new[i];
+            *(v + i) = v_new[i];
+        }
+
+        if (step % SAVE_EACH == 0) {
+            save_snapshot(h, step, NX, NY);
+            if (step % (SAVE_EACH * 10) == 0) {
+                double progress = (double)step / TOTAL_STEPS * 100;
+                double simulation_time = step * DT;
+                printf("Progreso: %.1f%% | Tiempo Simulado: %.0f segundos (%.1f minutos)\n", 
+                    progress, simulation_time, simulation_time / 60.0);
+            }
+        }
+
+        if (step % 1000 == 0) {
+            int is_there_an_error = 0;
+            for (int i = 0; i < total_of_shells && !is_there_an_error; i++) {
+                if (isnan(h[i]) || h[i] > 1000.0) {
+                    printf("ERROR: Inestabilidad numérica en el paso %d, celda %d\n", step, i);
+                    is_there_an_error = 1;
+                }
+            }
+            if (is_there_an_error) {
+                printf("Finalizando la simulación por inestabilidad numérica.\n");
+                break;
+            }
+        }
     }
+
+    double final_time = omp_get_wtime();
+    printf("\n Simulación completada en %.2f segundos \n", final_time - start_time);
+    double final_volume = calculate_volume(h, total_of_shells);
+    printf("El volúmen final: %.3f millones m³\n", final_volume / 1e6);
+    printf("DIferencia (pérdida por borde): %.3f millones de m³ (%.1f%%)\n", (initial_volume - final_volume) / 1e6, (initial_volume - final_volume) / initial_volume * 100);
+    save_snapshot(h, TOTAL_STEPS, NX, NY);
+
+    free(h); free(u); free(v); free(h_new); 
+    free(u_new); free(v_new), free(zb);
+
+    printf("\nSimulación finalizada. Snapshots guardados en carpeta 'snapshots/'\n");
+    printf("Total de snapshots: ~%d\n", TOTAL_STEPS / SAVE_EACH);
+    printf("Ejecuta el script de Python para visualizar los resultados.\n");
+    return 0;
 }
