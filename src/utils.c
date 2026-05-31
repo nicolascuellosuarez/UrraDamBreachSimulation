@@ -84,14 +84,12 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
         for (int i = 1; i < nx - 1; i++) {
             int idx = i + j * nx;
             
-            // ========== PROFUNDIDAD MÍNIMA (CLAMP) ==========
             double h_lim = fmax(h[idx], 0.05);
             double h_left = fmax(h[(i-1) + j*nx], 0.05);
             double h_right = fmax(h[(i+1) + j*nx], 0.05);
             double h_bottom = fmax(h[i + (j-1)*nx], 0.05);
             double h_top = fmax(h[i + (j+1)*nx], 0.05);
             
-            // ========== FLUJOS CONSERVATIVOS ==========
             double hu_left = h_left * u[(i-1)+j*nx];
             double hu_right = h_lim * u[idx];
             double dhu_dx = (hu_right - hu_left) / dx;
@@ -102,12 +100,10 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
             
             double new_h = h_lim - dt * (dhu_dx + dhv_dy);
             
-            // ========== CLAMP DE PROFUNDIDAD MÁXIMA ==========
             if (new_h < 0.05) new_h = 0.05;
             if (new_h > 200.0) new_h = 200.0;
             h_new[idx] = new_h;
             
-            // ========== SUPERFICIE LIBRE ==========
             double eta_center = h_lim + zb[idx];
             double eta_left = h_left + zb[(i-1)+j*nx];
             double eta_right = h_right + zb[(i+1)+j*nx];
@@ -117,7 +113,6 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
             double deta_dx = (eta_right - eta_left) / (2.0 * dx);
             double deta_dy = (eta_top - eta_bottom) / (2.0 * dy);
             
-            // ========== CLAMP DE GRADIENTE MÁXIMO ==========
             double max_grad = 0.15;
             if (fabs(deta_dx) > max_grad) deta_dx = (deta_dx > 0) ? max_grad : -max_grad;
             if (fabs(deta_dy) > max_grad) deta_dy = (deta_dy > 0) ? max_grad : -max_grad;
@@ -125,14 +120,12 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
             double u_new_val = u[idx] - dt * G * deta_dx;
             double v_new_val = v[idx] - dt * G * deta_dy;
             
-            // ========== CLAMP DE VELOCIDAD ==========
             double max_vel = 30.0;
             if (u_new_val > max_vel) u_new_val = max_vel;
             if (u_new_val < -max_vel) u_new_val = -max_vel;
             if (v_new_val > max_vel) v_new_val = max_vel;
             if (v_new_val < -max_vel) v_new_val = -max_vel;
             
-            // ========== FRICCIÓN MANNING ==========
             double speed = sqrt(u_new_val * u_new_val + v_new_val * v_new_val);
             if (speed > 0.1 && new_h > 0.1) {
                 double Sf = (n_manning * n_manning * speed * speed) / pow(new_h, 4.0/3.0);
@@ -147,7 +140,6 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
         }
     }
     
-    // ========== CONDICIONES DE BORDE REFLECTIVAS ==========
     #pragma omp parallel for
     for (int j = 0; j < ny; j++) {
         int idx = 0 + j * nx;
