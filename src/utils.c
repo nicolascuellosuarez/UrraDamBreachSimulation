@@ -44,8 +44,10 @@ void apply_breach(double *h, double *u, double *v, double *zb, int nx, int ny, d
                   double breach_time) {
     if (time < breach_start) return;
     
-    double factor = (time < breach_start + breach_time) ? 
-                    (time - breach_start) / breach_time : 1.0;
+    double factor = 1.0;
+    if (time < breach_start + breach_time) {
+        factor = (time - breach_start) / breach_time;
+    }
     
     int cells_breach = (int)(breach_width / dx);
     if (cells_breach < 1) cells_breach = 1;
@@ -53,9 +55,11 @@ void apply_breach(double *h, double *u, double *v, double *zb, int nx, int ny, d
     int start_breach = (ny / 2) - (cells_breach / 2);
     int end_breach = start_breach + cells_breach;
     
-    #pragma omp parallel for
-    for (int j = start_breach; j < end_breach && j < ny; j++) {
-        int idx = dam_x + j * nx;
+    int j, idx;
+    #pragma omp parallel for private(j, idx)
+    for (j = start_breach; j < end_breach; j++) {
+        if (j >= ny) continue;
+        idx = dam_x + j * nx;
         if (zb[idx] > 50.0) {
             zb[idx] = 50.0 + (zb[idx] - 50.0) * (1.0 - factor);
         }

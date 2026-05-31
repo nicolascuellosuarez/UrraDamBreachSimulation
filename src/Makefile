@@ -4,7 +4,7 @@ TARGET = simulador
 SRC = main.c init.c utils.c
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) -lm
 
 clean:
 	rm -f $(TARGET) snapshots/*.bin

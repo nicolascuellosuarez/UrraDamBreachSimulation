@@ -31,7 +31,7 @@
 #define BREACH_FORMATION_TIME 60.0
 
 // Control
-#define USE_REAL_TOPOGRAPHY 1
+#define USE_REAL_TOPOGRAPHY 0
 
 int main() {
     printf("\n========================================\n");

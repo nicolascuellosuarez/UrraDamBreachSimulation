@@ -43,8 +43,8 @@ void initialize_simulation_parameters(double *h, double *u, double *v, double *z
     }
 
     printf("La inicialización de la Simulación fue completada:\n");
-    printf("Profundidad máxima aguas arriba: %.2d m\n", h_upstream);
-    printf("Profundidad aguas abajo: %.2d m\n", h_downstream);
-    printf("Posición de la presa: celda %d (%.0f m)\n", dam_x_pos, dam_x_pos * dx);
+    printf("Profundidad máxima aguas arriba: %.2f m\n", h_upstream);
+    printf("Profundidad aguas abajo: %.2f m\n", h_downstream);
+    printf("Posición de la presa: celda %.0f (%.0f m)\n", dam_x_pos, dam_x_pos * dx);
     printf("Pendiente del Terreno: %.6f\n", slope);
 }
