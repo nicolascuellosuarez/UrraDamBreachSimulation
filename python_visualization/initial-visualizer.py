@@ -5,7 +5,7 @@ NX, NY = 600, 520
 DX, DY = 50.0, 50.0
 
 try:
-    zb = np.fromfile('/home/nicolas/UrraDamBreachSimulation/data/urra_topography.bin', dtype=np.float64).reshape(NY, NX)
+    zb = np.fromfile('/home/nicolas/UrraDamBreachSimulation/data/urra_specific_topography.bin', dtype=np.float64).reshape(NY, NX)
     print("Topografía real cargada")
 except:
     x = np.arange(NX) * DX
@@ -14,17 +14,23 @@ except:
     zb = 50.0 - 0.00015 * X + 2.0 * np.sin(0.001 * Y)
     print("Topografía sintética generada")
 
-
 h = np.zeros((NY, NX))
 H_UPSTREAM, H_DOWNSTREAM = 130.5, 68.0
 DAM_X_POS = 0 
 
 for j in range(NY):
     for i in range(NX):
-        if i < DAM_X_POS + 5:  
-            h[j, i] = max(0, H_UPSTREAM - zb[j, i])
-        else:  
-            h[j, i] = max(0, H_DOWNSTREAM - zb[j, i])
+        # Agua donde el terreno está por debajo del nivel del embalse
+        if zb[j, i] < H_UPSTREAM:
+            h[j, i] = H_UPSTREAM - zb[j, i]
+        else:
+            h[j, i] = 0.01
+        
+        # Aguas abajo (río) - después de la presa
+        if i > DAM_X_POS and zb[j, i] < H_DOWNSTREAM + 10.0:
+            rio_depth = H_DOWNSTREAM - zb[j, i]
+            if rio_depth > h[j, i]:
+                h[j, i] = rio_depth
         if h[j, i] < 0.01:
             h[j, i] = 0.01
 

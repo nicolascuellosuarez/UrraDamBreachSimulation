@@ -30,12 +30,18 @@ void initialize_simulation_parameters(double *h, double *u, double *v, double *z
                 zb[idx] = 50.0 - slope * x + 2.0 * sin(0.001 * y);
             }
 
-            if (i < dam_x_pos) {
+            if (zb[idx] < h_upstream) {
                 h[idx] = h_upstream - zb[idx];
-                if (h[idx] < 0) h[idx] = 0;
             } else {
-                h[idx] = h_downstream - zb[idx];
-                if (h[idx] < 0) h[idx] = 0;
+                h[idx] = 0.01;
+            }
+
+            if (i > dam_x_pos && zb[idx] < h_downstream + 10.0) {
+                double rio_depth = h_downstream - zb[idx];
+                if (rio_depth > h[idx]) {
+                    h[idx] = rio_depth;
+                }
+                if (h[idx] < 0.01) h[idx] = 0.01;
             }
 
             if (h[idx] < 0.01) h[idx] = 0.01; // Minimum Value of water level

@@ -6,8 +6,8 @@
 #include "utils.h"
 
 // Domain
-#define NX 200
-#define NY 200
+#define NX 600
+#define NY 520
 #define DX 50.0
 #define DY 50.0
 #define DT 0.05
@@ -31,7 +31,7 @@
 #define BREACH_FORMATION_TIME 60.0
 
 // Control
-#define USE_REAL_TOPOGRAPHY 0
+#define USE_REAL_TOPOGRAPHY 1
 
 int main() {
     printf("\n========================================\n");
@@ -60,7 +60,7 @@ int main() {
 
     if (USE_REAL_TOPOGRAPHY) {
         printf("Cargando topografía real...\n");
-        charge_real_topography(zb, NX, NY, "data/urra_topography.bin");
+        charge_real_topography(zb, NX, NY, "data/urra_specific_topography.bin");
     } else {
         printf("Usando topografía sintética\n");
     }
