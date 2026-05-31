@@ -84,21 +84,40 @@ void solver_pass(double *h, double *u, double *v, double *h_new, double *u_new, 
             
             double h_left = h[(i-1) + j*nx];
             double h_right = h[(i+1) + j*nx];
-            double u_avg = (u[(i+1)+j*nx] + u[idx]) / 2.0;
-            
             double h_bottom = h[i + (j-1)*nx];
             double h_top = h[i + (j+1)*nx];
-            double v_avg = (v[i+(j+1)*nx] + v[idx]) / 2.0;
             
-            double dhx = (h_right - h_left) / (2.0 * dx);
-            double dhy = (h_top - h_bottom) / (2.0 * dy);
+            double hu_left = h_left * u[(i-1)+j*nx];
+            double hu_right = h[idx] * u[idx];
+            double dhu_dx = (hu_right - hu_left) / dx;
             
-            double new_h = h[idx] - dt * (u_avg * dhx + v_avg * dhy);
-            
+            double hv_bottom = h_bottom * v[i+(j-1)*nx];
+            double hv_top = h[idx] * v[idx];
+            double dhv_dy = (hv_top - hv_bottom) / dy;
+            double new_h = h[idx] - dt * (dhu_dx + dhv_dy);
             h_new[idx] = (new_h > 0.01) ? new_h : 0.01;
             
-            u_new[idx] = u[idx] - dt * G * (h_new[idx] - h_new[(i-1)+j*nx]) / dx;
-            v_new[idx] = v[idx] - dt * G * (h_new[idx] - h_new[i+(j-1)*nx]) / dy;
+            double eta = h[idx] + zb[idx];
+            double eta_left = h_left + zb[(i-1)+j*nx];
+            double eta_right = h_right + zb[(i+1)+j*nx];
+            double eta_bottom = h_bottom + zb[i+(j-1)*nx];
+            double eta_top = h_top + zb[i+(j+1)*nx];
+            
+            double deta_dx = (eta_right - eta_left) / (2.0 * dx);
+            double deta_dy = (eta_top - eta_bottom) / (2.0 * dy);
+            
+            u_new[idx] = u[idx] - dt * G * deta_dx;
+            v_new[idx] = v[idx] - dt * G * deta_dy;
+            
+            double speed = sqrt(u_new[idx] * u_new[idx] + v_new[idx] * v_new[idx]);
+            
+            if (speed > 0.01 && h_new[idx] > 0.05) {
+                double Sf = (n_manning * n_manning * speed * speed) / pow(h_new[idx], 4.0/3.0);
+                double fric_factor = dt * G * Sf / (speed + 0.001);
+                
+                u_new[idx] = u_new[idx] * (1.0 - fric_factor);
+                v_new[idx] = v_new[idx] * (1.0 - fric_factor);
+            }
         }
     }
 }
