@@ -106,7 +106,7 @@ int main() {
         
         static double last_save_time = 0;
         if (current_time - last_save_time >= 30.0 || step == 1) {
-            save_snapshot(h, step, NX, NY, "snapshots");
+            save_snapshot(h, step, NX, NY, "/home/nicolas/UrraDamBreachSimulation/snapshots");
             last_save_time = current_time;
             
             double max_h = 0.0, min_h = 1e9, max_u = 0.0, max_v = 0.0;
