@@ -1,4 +1,3 @@
-// utils.c - Versión del 9% (con clamps físicos que funcionaron)
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
